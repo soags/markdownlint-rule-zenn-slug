@@ -6,7 +6,8 @@ export default {
   description: 'Linting file name for zenn convention.',
   tags: ['zenn'],
   parser: 'markdownit',
-  function: (params, onError) => {
+  asynchronous: true,
+  function: async (params, onError) => {
     const filePath = path.parse(params.name)
     const slug = filePath.name
 
@@ -14,6 +15,15 @@ export default {
       onError({
         lineNumber: 1,
         detail: getSlugErrorMessage(slug),
+      })
+    }
+
+    const response = await fetch(`https://zenn.dev/api/articles/${slug}`)
+
+    if (response.ok) {
+      onError({
+        lineNumber: 1,
+        detail: getConflictSlugMessage(slug),
       })
     }
   },
@@ -28,9 +38,9 @@ function getSlugErrorMessage(slug: string) {
   return `slugの値（${slug}）が不正です。小文字の半角英数字（a-z0-9）、ハイフン（-）、アンダースコア（_）の12〜50字の組み合わせにしてください`
 }
 
-// function getConflictSlugMessage(slug: string) {
-//   return `slugの値（${slug}）が不正です。このslugは既に使われています。`
-// }
+function getConflictSlugMessage(slug: string) {
+  return `slugの値（${slug}）が不正です。このslugは既に使われています。`
+}
 
 // function validateChapterSlug(slug: string) {
 //   if (!slug) return false

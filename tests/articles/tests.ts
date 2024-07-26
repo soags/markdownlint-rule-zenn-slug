@@ -14,9 +14,9 @@ testArticle('INVALIDCHARACTER.md', false)
 
 testArticle('無効なファイル名.md', false)
 
-testArticle('what-is-slug.md', true)
+testArticle('what-is-slug.md', false)
 
-testArticle('install-zenn-cli.md', true)
+testArticle('install-zenn-cli.md', false)
 
 testArticle('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5.md', true)
 
@@ -32,7 +32,9 @@ function init() {
 function testArticle(inputFile: string, expected: boolean) {
   const filePath = path.join(articlePath, inputFile)
 
-  test(inputFile, (t) => {
+  test(inputFile, async (t) => {
+    t.plan(1)
+
     const options: Options = {
       config: {
         'zenn-slug': true,
@@ -43,8 +45,15 @@ function testArticle(inputFile: string, expected: boolean) {
 
     fs.writeFileSync(filePath, '')
 
-    const results = markdownlint.sync(options)
-    t.is(checkResult(results), expected)
+    return new Promise<void>((resolve) => {
+      markdownlint(options, (err, results) => {
+        if (!results) return
+
+        t.is(checkResult(results), expected)
+
+        resolve()
+      })
+    })
   })
 }
 
